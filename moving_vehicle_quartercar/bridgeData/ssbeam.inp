@@ -1,0 +1,50 @@
+*parameter
+E = 210.e9
+G = E/(2*(1+0.3)) 
+**4e15
+I = 0.057
+It = 0.3 
+** 0.074
+A = ((2+1+1)*30e-3)+(0.1*(4./6))
+mu = 3055.
+rho = float(mu)/A
+L = 40.
+**xi = 0.5/100
+*node,nset=support1
+10001,0,0,0
+*node,nset=support2
+10101,<L>,0,0
+*ngen,nset=nodesdeck
+10001,10101,1
+*element,type=B31
+10001,10001,10002
+*elgen,elset=deck
+10001,100,1,1,
+*Beam General Section, elset=deck, density=<rho>, section=GENERAL
+<A>,<I>, 0.0,<It>,<I>
+0.,1.,0.
+<E>,<G>
+*Boundary
+support1,3,3
+support1,4,4
+support1,6,6
+support2,3,3
+support2,4,4
+support2,6,6
+nodesdeck,1,1
+nodesdeck,2,2
+** 
+** STEP: Step-1
+** 
+*STEP, name=Step-1, nlgeom=no
+  Extract mode frequencies
+*Frequency, eigensolver=Lanczos, normalization=mass
+**10, , , , ,
+, , 50, , , 
+**To ask for all the modes below 20 Hz  
+** 5, , , , , To ask for the first 5 frequencies
+*Output, field
+*Node Output
+COORD, U
+*End Step
+
