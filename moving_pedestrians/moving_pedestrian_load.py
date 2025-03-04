@@ -79,7 +79,7 @@ if __name__ == '__main__':
     DirectionMoment = 4 # Because the vertical load may induce torsion
 
     L = 40.                 # Total length of the deck
-    tmax = 1.2*L/VLoad     # Total calculation time. Keep this to have it 25% larger than the time it takes for a single load to cross the bridge if it starts at the left abutment
+    tmax = 1.1*L/VLoad     # Total calculation time. Keep this to have it 25% larger than the time it takes for a single load to cross the bridge if it starts at the left abutment
     dt = 1./500 # Step time in s.
 
 
@@ -95,7 +95,7 @@ if __name__ == '__main__':
     VehicleOrderToWrite = [0]   # Order of vehicle to get the response from
     writeOutputRate = 1
     # Animation
-    animationRate = 50   #10 # Rate of frame recording for the animations, = 0 if no animation is to be recorded
+    animationRate = 80   #10 # Rate of frame recording for the animations, = 0 if no animation is to be recorded
     scaleFactorAnimation = 10000
     yc = 2. # Shift nodes to refer to center of section
     zc = 0.3 # Shift nodes to refer to center of section
