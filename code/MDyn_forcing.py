@@ -6,6 +6,7 @@ For extra capabilities of the code, code development, and bug reporting please c
 
 from MDyn_solver import *
 from MDyn_utils import *
+from MDyn_vibsystems import *
 
 import numpy as np
 from scipy.interpolate import interp1d
@@ -13,7 +14,7 @@ from scipy.signal import convolve
 
 #from scipy.interpolate import RegularGridInterpolator
 from scipy.integrate import odeint
-from scipy.integrate import simps
+#from scipy.integrate import simps
 from scipy import integrate
 
 #import time
@@ -70,6 +71,13 @@ class MovingLoads():
         self.XCGVehicle0 = kwargs.get("XCGVehicle0")
         self.YCGVehicle0 = kwargs.get("YCGVehicle0")
         self.VVehicle = kwargs.get("VVehicle")
+        self.IrregularityFlag = kwargs.get("IrregularityFlag")
+        if self.IrregularityFlag == 'On':
+            self.IrregularityData = kwargs.get("IrregularityData")
+            self.yCoordIrregularityData = kwargs.get("yCoordIrregularityData")
+            self.xPavement = self.IrregularityData[:,0]
+            self.zPavementLine1 = self.IrregularityData[:,1]
+            self.zPavementLine2 = self.IrregularityData[:,1]
 
         self.VLoad = kwargs.get("VLoad")
         self.index0=np.where(self.BeamNumber==self.VehicleBeams[0,0])[0][0]
@@ -80,15 +88,54 @@ class MovingLoads():
 
         self.NodeXVehicleBeams = self.NodeX[self.index0:self.index1+2]# ASSUMES CONSECUTIVE NUMBERING IN VEHICLEBEAMS AND nodes
 
+        # Pedestrians
         self.Gv = kwargs.get("Gv")
         self.phiv = kwargs.get("phiv")
         self.fmv = kwargs.get("fmv")
+
+        # Vehicle VBI
+        self.MassVehicles = kwargs.get("MassVehicles")
+        self.DampingVehicles = kwargs.get("DampingVehicles")
+        self.StiffnessVehicles = kwargs.get("StiffnessVehicles")
+        self.VehicleType = kwargs.get("VehicleType")
+        self.FzStatic = []  # Static load of each wheel in vertical direction [[wheel 1 vehicle 1, wheel 2 vehicle 1...][wheel 1 vehicle 2, ...]]
+        if self.VehicleType is not None:
+            for dl in range(len(self.VVehicle)):
+                if self.VehicleType[dl] == 'quarterCar':
+                    self.FzStatic.append(-1*self.MassVehicles[dl][0]*9.81)
 
     def FindCentroidLoadConstantSpeed(self,dl,time):
         # Assumed constant speed and straight path parallel to bridge
         XCGVehicle = self.XCGVehicle0[dl]+(self.VVehicle[dl]*time)
         YCGVehicle = self.YCGVehicle0[dl]
         return [XCGVehicle,YCGVehicle]
+
+    def InterpolateIrregularity(self,xyCGVehicle):
+        # Obtain pavement irregularities at single wheel contact point
+
+        x_input = xyCGVehicle[0]
+        y_input = xyCGVehicle[1]
+
+        # Ensure x_input is within range
+        if x_input < self.xPavement[0] or x_input > self.xPavement[-1]:
+            raise ValueError("x_input is out of bounds")
+
+        # Find the two closest x-values for interpolation
+        idx = np.searchsorted(self.xPavement, x_input) - 1
+        idx = max(0, min(idx, len(self.xPavement) - 2))
+
+        x1, x2 = self.xPavement[idx], self.xPavement[idx + 1]
+        z1_y_col1, z2_y_col1 = self.zPavementLine1[idx], self.zPavementLine1[idx + 1]
+        z1_y_col2, z2_y_col2 = self.zPavementLine2[idx], self.zPavementLine2[idx + 1]
+
+        # Interpolate in x-direction at y_col1 and y_col2
+        z_x_y_col1 = z1_y_col1 + (z2_y_col1 - z1_y_col1) * (x_input - x1) / (x2 - x1)
+        z_x_y_col2 = z1_y_col2 + (z2_y_col2 - z1_y_col2) * (x_input - x1) / (x2 - x1)
+
+        # Interpolate in y-direction to find final z value
+        zpavement = z_x_y_col1 + (z_x_y_col2 - z_x_y_col1) * (y_input - self.yCoordIrregularityData[0]) / (self.yCoordIrregularityData[1] - self.yCoordIrregularityData[0])
+
+        return zpavement
 
     def ConstantMovingLoads(self,time,P):
         for dl in range(len(self.PVehicle)):		 # Loop in vehicles
@@ -116,11 +163,34 @@ class MovingLoads():
         return P
 
     def InitialiseVehicleReactions(self):
-		#  [order of pedestrian with one contact point] [x coordinate of force, y coordinate of force, force]
-        xyFLoad = []
-        for dl in range(len(self.Gv)):
-            xyFLoad.append([0,0,0])
-        return xyFLoad
+        F = []
+        for dl in range(len(self.VVehicle)):
+            if self.VehicleType[dl] == 'quarterCar':
+                NumWheelsVehicle = 1 # There is one wheel in this vehicle
+                NumDirectionsRections = 1 # Only vertical reaction forces
+                F.append(np.zeros((NumDirectionsRections,NumWheelsVehicle))) # Vibrating system reaction forces: [vehicle order in vector self.VehicleOrderToWrite] [Rows Direction of reaction force; Cols. wheel]
+        return F
+
+    def InitialiseContactIrregularities(self):
+        zpavement = []
+        for dl in range(len(self.VVehicle)):
+            if self.VehicleType[dl] == 'quarterCar':
+                NumWheelsVehicle = 1 # There is one wheel in this vehicle
+                zpavement.append(np.zeros(NumWheelsVehicle)) # Vibrating system contact irregularities: [vehicle order in vector self.VehicleOrderToWrite] [Rows wheel]
+        return zpavement
+
+    def calculateResponseAtContactPoint(self,r,dl,wh,ks,xNode1,xLoad,BeamElementLength):
+
+        rZbridge1 = r[ks+(2*self.NumberOfNodes)] 	# Vertical displacement of the bridge in the start node of the element in which the load is located
+        rZbridge2 = r[ks+1+(2*self.NumberOfNodes)] 	# Vertical displacement of the bridge in the end node of the element in which the load is located
+        urXbridge1 = r[ks+(3*self.NumberOfNodes)] 	# Rotation URX of the bridge in the start node of the element in which the load is located
+        urXbridge2 = r[ks+1+(3*self.NumberOfNodes)] 	# Rotation URX of the bridge in the end node of the element in which the load is located
+
+        rZContactBridgeCentreline = rZbridge1+((xLoad-xNode1)*(rZbridge2-rZbridge1)/BeamElementLength)
+        urXContactBridgeCentreline = urXbridge1+((xLoad-xNode1)*(urXbridge2-urXbridge1)/BeamElementLength)
+        rZContactBridge = rZContactBridgeCentreline + urXContactBridgeCentreline*(self.YVehicle[dl][wh]+self.YCGVehicle0[dl])	# Vertical displacement of the deck at the contact point of the wheel.
+
+        return rZContactBridge
 
     def SteppingMovingLoads(self,dl,xyCGVehicle,time):
         numberharmonics = len(self.Gv[dl])
@@ -155,6 +225,95 @@ class MovingLoads():
 
         return ret
 
+    def initialiseVehicleResponse(self):
+
+        DofCont = 0
+
+        for dl in range(len(self.VVehicle)):
+            if self.VehicleType[dl] == 'quarterCar':
+                DofCont = DofCont + 1
+
+        return np.zeros(DofCont)
+
+    def VBIvertical(self,dl,xyCGVehicle,r,rdot,q,qdot,F,zpavement,ts):
+        XCGVehicle0 = xyCGVehicle[0]
+        YCGVehicle0 = xyCGVehicle[1]
+        Ptemp = np.zeros(self.NumberOfNodes*len(self.DOFactive))
+		#ContDOFVehicle = 0
+		#ContWheelVehicle = 0
+
+        if self.VehicleType[dl] == 'quarterCar':
+            NumberOfWheels = 1
+            NumDOFsVehicle = 1
+            wh = 0  # Order of wheel in vehicle
+            xLoad = XCGVehicle0 # + self.XVehicle[dl] # Position of the load
+            yLoad = YCGVehicle0 # + self.YVehicle[dl]
+            if self.xFirstNodeVehicleBeams <= xLoad and xLoad <= self.xLastNodeVehicleBeams: # The load is on the Bridge
+                ks = bisect_left(self.NodeXVehicleBeams,xLoad)-1
+                xNode1 = self.NodeX[ks]	# Coordinate of the start node in the loaded beam
+                BeamElementLength = self.NodeX[ks+1]-xNode1 # Assumes deck straight in x direction
+
+                rZContactBridge = self.calculateResponseAtContactPoint(r,dl,wh,ks,xNode1,xLoad,BeamElementLength)
+                rZdotContactBridge = self.calculateResponseAtContactPoint(rdot,dl,wh,ks,xNode1,xLoad,BeamElementLength)
+
+                # To do: add pavement irregularity
+
+            else:
+                rZContactBridge = 0.0
+                rZdotContactBridge = 0.0
+
+            # Irregularity
+            dti = ts[1] - ts[0]
+            zpavementn = np.zeros(NumberOfWheels)
+            zdotpavement = np.zeros(NumberOfWheels)
+            if self.IrregularityFlag == 'On':
+                zpavementn[0] = self.InterpolateIrregularity(xyCGVehicle)
+                zdotpavement[0] = (zpavementn[0] - zpavement[0])/dti  # zpavement[0] because there is only one wheel
+            else:
+                zpavementn[0] = 0.0
+                zdotpavement[0] = 0.0
+
+            zg = rZContactBridge + zpavementn[0]
+            zgdot = rZdotContactBridge + zdotpavement[0]
+
+            # VEHICLE RESPONSE AT THE VEHICLE LEVEL (CONSIDERING ALL THE WHEELS)
+            i0ls = np.zeros(NumDOFsVehicle*2)
+            contdofi = 0
+            for dofv in range(NumDOFsVehicle):
+                i0ls[contdofi] = q
+                i0ls[contdofi+1] = qdot
+                contdofi = contdofi + 2
+
+            # roughnessAtWheels = [[zg,zg],[zgdot,zgdot]], zg and zgdot are doubled to make the general loop work for any vehicle, but the second components of each element in this variable are not used
+            #roughnessAtWheels = [[zg,zg],[zgdot,zgdot]]
+            qlint = odeint(SDOFUnsprungMass,i0ls,ts,args=(self.MassVehicles[dl][0],self.DampingVehicles[dl][0],self.StiffnessVehicles[dl][0],zg,zgdot,),mxstep=5000000)
+            q = qlint[-1,0]
+            qdot = qlint[-1,1]
+
+            # Reaction forces at the bridge
+
+            FzDynamic = self.StiffnessVehicles[dl][0]*(q-zg) + self.DampingVehicles[dl][0]*(qdot-zgdot) # Positive force related to a movement upwards of the vehicle wheel mass and negative movement of the road #### Vertical EFFECT OF THE VEHICLE ON THE BRIDGE, global coordinates of the bridge
+            # To do!!! Longitudinal effects (traction, rolling resistance, bracking effects ...) Introduce FxDynamic and MyyDynamic
+            FzTotal = self.FzStatic[dl] + FzDynamic  # GLOBAL coordinates of the bridge
+
+            F[0,0] = FzTotal # Output of vehicle reactions [direction,wheel]
+
+            if self.xFirstNodeVehicleBeams <= xLoad and xLoad <= self.xLastNodeVehicleBeams: # The load is on the Bridge
+
+                PNode1 = (FzTotal*(1-((xLoad-xNode1)/BeamElementLength)))
+                PNode2 = FzTotal-PNode1
+                MNode1 = PNode1*yLoad
+                MNode2 = PNode2*yLoad
+                # Vertical loads
+                Ptemp[(self.NumberOfNodes*self.indexDOFLoad)+ks] = PNode1
+                Ptemp[(self.NumberOfNodes*self.indexDOFLoad)+ks+1] = PNode2
+                # Torsional moments
+                Ptemp[(self.NumberOfNodes*self.indexDOFMoment)+ks] = MNode1
+                Ptemp[(self.NumberOfNodes*self.indexDOFMoment)+ks+1] = MNode2
+
+        return [Ptemp,q,qdot,F,zpavementn,zg]
+
+
 class HarmonicLoads():
 
     def __init__(self, **kwargs):
@@ -187,6 +346,53 @@ class HarmonicLoads():
         P[(self.NumberOfNodes*(self.DofHarmonicLoad[dl]-1))+index0] = loadAmplitude
         return [P,loadAmplitude]
 
+
+
+class SeismicLoads():
+
+    def __init__(self, **kwargs):
+        #self.t = kwargs.get("t")
+        self.DOFactive = kwargs.get("DOFactive")
+        self.modesToInclude = kwargs.get("modesToInclude")
+        self.NumberOfNodes = kwargs.get("NumberOfNodes")
+        self.Phi = kwargs.get("Phi")
+        self.wnv = kwargs.get("wnv")
+        self.xinv = kwargs.get("xinv")
+        self.beta = kwargs.get("beta")
+        self.gamma = kwargs.get("gamma")
+        self.NodeX = kwargs.get("NodeX")
+        self.NodeNumber = kwargs.get("NodeNumber")
+        self.BeamNode1 = kwargs.get("BeamNode1")
+        self.BeamNode2 = kwargs.get("BeamNode2")
+        self.BeamLength = kwargs.get("BeamLength")
+        self.BeamNumber = kwargs.get("BeamNumber")
+
+        self.GammaInformation = kwargs.get("GammaInformation")
+        self.accel_t = kwargs.get("accel_t")
+        self.accel_X = kwargs.get("accel_X")
+        self.accel_Y = kwargs.get("accel_Y")
+        self.accel_Z = kwargs.get("accel_Z")
+
+        # Interpolate accelerogram at step times of analysis
+        self.axinterp1d = interp1d(self.accel_t,self.accel_X)
+        self.ayinterp1d = interp1d(self.accel_t,self.accel_Y)
+        self.azinterp1d = interp1d(self.accel_t,self.accel_Z)
+
+    def ground_acceleration(self,time):
+        ax = self.axinterp1d(time)
+        ay = self.ayinterp1d(time)
+        az = self.azinterp1d(time)
+        ag = [ax,ay,az]
+
+        return ag
+
+    def seismic_mrha_sync(self,ag):
+        ax = ag[0]
+        ay = ag[1]
+        az = ag[2]
+        Pn = (-1*self.GammaInformation[:,0]*ax) + (-1*self.GammaInformation[:,1]*ay) + (-1*self.GammaInformation[:,2]*az)
+
+        return Pn
 
 class WindLoads():
 

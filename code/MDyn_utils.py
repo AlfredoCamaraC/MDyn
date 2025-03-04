@@ -82,6 +82,14 @@ class PlotModel():
 		self.TMDDirection = kwargs.get("TMDDirection")
 		self.TMDVisual = kwargs.get("TMDVisual")
 
+		# VBI
+		self.YVehicle = kwargs.get("YVehicle")
+		self.XVehicle = kwargs.get("XVehicle")
+		self.XCGVehicle0 = kwargs.get("XCGVehicle0")
+		self.YCGVehicle0 = kwargs.get("YCGVehicle0")
+		self.VehicleType = kwargs.get("VehicleType")
+		self.VehicleVisual = kwargs.get("VehicleVisual")
+
 		# Index of the active DOF in which the TMD is applied
 		#self.indexDOFTMD = np.zeros(len(self.TMDNodes))
 
@@ -108,6 +116,9 @@ class PlotModel():
 		self.ydimEstimate = ydimEstimate
 		self.zdimEstimate = zdimEstimate
 		self.dimensionPlot = maxdimEstimate
+
+		self.NodesEarthquake = kwargs.get("NodesEarthquake")
+		self.DirectionsEarthquake = kwargs.get("DirectionsEarthquake")
 
 	def plotUndeformedModel(self):
 		#ax = self.prepare_fig()
@@ -241,6 +252,106 @@ class PlotModel():
 		plt.savefig(results_dir + filename)
 		plt.close()
 
+
+	def plotDeformedStructureEarthquake(self,it,t,r,ag):
+		ux = r[:self.NumberOfNodes]
+		uy = r[self.NumberOfNodes:self.NumberOfNodes*2]
+		uz = r[self.NumberOfNodes*2:self.NumberOfNodes*3]
+
+		NodeXdef = self.NodeX+ux*self.scaleFactorAnimation
+		NodeYdef = self.NodeY+uy*self.scaleFactorAnimation
+		NodeZdef = self.NodeZ+uz*self.scaleFactorAnimation
+		#ax = self.prepare_fig()
+		fig = plt.figure()
+		ax = fig.add_subplot(projection='3d')
+		ax.set_box_aspect((self.xdimEstimate, self.ydimEstimate, self.zdimEstimate))  # aspect ratio is 1:1:1 in data space
+		#ax.set_zlim(-1, 1)
+		NodeNumberCList = list(self.NodeNumber)
+		for i in range(len(self.BeamNode1)):
+			Node1 = self.BeamNode1[i]
+			Node2 = self.BeamNode2[i]
+			orderNode1 = NodeNumberCList.index(Node1)
+			orderNode2 = NodeNumberCList.index(Node2)
+			x = [NodeXdef[orderNode1],NodeXdef[orderNode2]]
+			y = [NodeYdef[orderNode1],NodeYdef[orderNode2]]
+			z = [NodeZdef[orderNode1],NodeZdef[orderNode2]]
+			ax.plot(x, y, z, c='tab:blue', linewidth=1)
+
+		# Plot accelerograma arrows
+		arrowDimension = self.dimensionPlot/50
+		# x Direction
+		for i in range(len(self.NodesEarthquake)): # loop in nodes with ground motion applied
+			NodeOrder = NodeNumberCList.index(int(self.NodesEarthquake[i]))
+			xNode1 = NodeXdef[NodeOrder]
+			yNode1 = NodeYdef[NodeOrder]
+			zNode1 = NodeZdef[NodeOrder]
+
+			if self.DirectionsEarthquake[i,0] != 0:	# Earthquake applied in x direction
+				xNode2 = xNode1 + ag[0]
+				yNode2 = yNode1
+				zNode2 = zNode1
+				x = [xNode1,xNode2]
+				y = [yNode1,yNode2]
+				z = [zNode1,zNode2]
+				# line
+				ax.plot(x, y, z, c='tab:red', linewidth=1)
+				# arrow head
+				ax.plot([xNode2,xNode2+arrowDimension], y, [zNode2+arrowDimension*1.2,zNode2], c='tab:red', linewidth=1)
+				ax.plot([xNode2,xNode2+arrowDimension], y, [zNode2-arrowDimension*1.2,zNode2], c='tab:red', linewidth=1)
+				ax.plot([xNode2,xNode2], y, [zNode2+arrowDimension*1.2,zNode2-arrowDimension*1.2], c='tab:red', linewidth=1)
+			if self.DirectionsEarthquake[i,1] != 0:	# Earthquake applied in y direction
+				xNode2 = xNode1
+				yNode2 = yNode1 + ag[1]
+				zNode2 = zNode1
+				x = [xNode1,xNode2]
+				y = [yNode1,yNode2]
+				z = [zNode1,zNode2]
+				# line
+				ax.plot(x, y, z, c='tab:red', linewidth=1)
+				# arrow head
+				ax.plot(x, [yNode2,yNode2+arrowDimension], [zNode2+arrowDimension*1.2,zNode2], c='tab:red', linewidth=1)
+				ax.plot(x, [yNode2,yNode2+arrowDimension], [zNode2-arrowDimension*1.2,zNode2], c='tab:red', linewidth=1)
+				ax.plot(x, [yNode2,yNode2], [zNode2+arrowDimension*1.2,zNode2-arrowDimension*1.2], c='tab:red', linewidth=1)
+			if self.DirectionsEarthquake[i,2] != 0:	# Earthquake applied in y direction
+				xNode2 = xNode1
+				yNode2 = yNode1
+				zNode2 = zNode1 + ag[2]
+				x = [xNode1,xNode2]
+				y = [yNode1,yNode2]
+				z = [zNode1,zNode2]
+				# line
+				ax.plot(x, y, z, c='tab:red', linewidth=1)
+				# arrow head
+				ax.plot([xNode2+arrowDimension*1.2,xNode2], y, [zNode2,zNode2+arrowDimension*1.2], c='tab:red', linewidth=1)
+				ax.plot([xNode2-arrowDimension*1.2,xNode2], y, [zNode2,zNode2+arrowDimension*1.2], c='tab:red', linewidth=1)
+				ax.plot([xNode2-arrowDimension*1.2,xNode2+arrowDimension*1.2], y, [zNode2,zNode2], c='tab:red', linewidth=1)
+
+		# Setting the axes properties
+		if min(self.NodeX) != max(self.NodeX):
+			ax.set(xlim3d=(min(self.NodeX)*1.2, max(self.NodeX)*1.2))
+		else:
+			ax.set(xlim3d=(-1*self.dimensionPlot/10, self.dimensionPlot/10))
+		if min(self.NodeY) != max(self.NodeY):
+			ax.set(ylim3d=(min(self.NodeY)*1.2, max(self.NodeY)*1.2))
+		else:
+			ax.set(ylim3d=(-1*self.dimensionPlot/10, self.dimensionPlot/10))
+		if min(self.NodeZ) != max(self.NodeZ):
+			ax.set(zlim3d=(min(self.NodeZ)*1.2, max(self.NodeZ)*1.2))
+		else:
+			ax.set(zlim3d=(-1*self.dimensionPlot/10, self.dimensionPlot/10))
+
+		ax.title.set_text('Deformation scale factor: '+str(round(self.scaleFactorAnimation,1)))
+		ax.text(max(self.NodeX)*1.1, min(self.NodeY)*1.1, min(self.NodeZ)*1.1, 't = '+str(round(t,2))+'s')
+		ax.set_axis_off()
+		#plt.show()
+		results_dir = os.path.join(self.script_dir, self.caseName+"/deformation_animation/")
+		if not os.path.isdir(results_dir):
+			os.makedirs(results_dir)
+		filename = 'deformation_iteration_'+str(it)+'.png'#, bbox_inches = None)
+		plt.savefig(results_dir + filename)
+		plt.close()
+
+
 	def plotDeformedStructureTMD(self,it,t,r,s):
 		ux = r[:self.NumberOfNodes]
 		uy = r[self.NumberOfNodes:self.NumberOfNodes*2]
@@ -328,6 +439,87 @@ class PlotModel():
 		filename = 'deformation_iteration_'+str(it)+'.png'#, bbox_inches = None)
 		plt.savefig(results_dir + filename)
 		plt.close()
+
+
+	def plotDeformedStructureVBI(self,it,t,r,q,xyCGVehiclev,zgv):
+		ux = r[:self.NumberOfNodes]
+		uy = r[self.NumberOfNodes:self.NumberOfNodes*2]
+		uz = r[self.NumberOfNodes*2:self.NumberOfNodes*3]
+
+		NodeXdef = self.NodeX+ux*self.scaleFactorAnimation
+		NodeYdef = self.NodeY+uy*self.scaleFactorAnimation
+		NodeZdef = self.NodeZ+uz*self.scaleFactorAnimation
+
+
+		#ax = self.prepare_fig()
+		fig = plt.figure()
+		ax = fig.add_subplot(projection='3d')
+		ax.set_box_aspect((self.xdimEstimate, self.ydimEstimate, self.zdimEstimate))  # aspect ratio is 1:1:1 in data space
+		#ax.set_zlim(-1, 1)
+		NodeNumberCList = list(self.NodeNumber)
+		for i in range(len(self.BeamNode1)):
+			Node1 = self.BeamNode1[i]
+			Node2 = self.BeamNode2[i]
+			orderNode1 = NodeNumberCList.index(Node1)
+			orderNode2 = NodeNumberCList.index(Node2)
+			x = [NodeXdef[orderNode1],NodeXdef[orderNode2]]
+			y = [NodeYdef[orderNode1],NodeYdef[orderNode2]]
+			z = [NodeZdef[orderNode1],NodeZdef[orderNode2]]
+			ax.plot(x, y, z, c='tab:blue', linewidth=1)
+		for dl in range(len(self.VehicleType)):	# Loop in number of vehicles
+			if self.VehicleType[dl] == 'quarterCar':
+				dContactVehicleBox = self.VehicleVisual[dl][2]*1.5
+				XCGVehicle0 = xyCGVehiclev[dl][0]
+				YCGVehicle0 = xyCGVehiclev[dl][1]
+				xNode2 = XCGVehicle0
+				yNode2 = YCGVehicle0
+				zNode2 = zgv[dl]+dContactVehicleBox+q[dl]*self.scaleFactorAnimation
+				x = [XCGVehicle0,xNode2]
+				y = [YCGVehicle0,yNode2]
+				z = [zgv[dl]*self.scaleFactorAnimation,zNode2]
+
+				ax.plot(x, y, z, color='black', linewidth=1, linestyle = '--')
+
+				# Plot hexaedra representing the TMD Mass
+				# Hexaedra nodes
+				l = self.VehicleVisual[dl][0]
+				b = self.VehicleVisual[dl][1]
+				h = self.VehicleVisual[dl][2]
+				xNodeHex = [xNode2-l,xNode2+l,xNode2+l,xNode2-l,xNode2-l,xNode2+l,xNode2+l,xNode2-l]	# x coord of 8 nodes
+				yNodeHex = [yNode2-b,yNode2-b,yNode2+b,yNode2+b,yNode2-b,yNode2-b,yNode2+b,yNode2+b]	# y coord of 8 nodes
+				zNodeHex = [zNode2-h,zNode2-h,zNode2-h,zNode2-h,zNode2+h,zNode2+h,zNode2+h,zNode2+h]	# z coord of 8 nodes
+				# Hexaedra faces
+				vertices = [[0,1,2,3],[4,5,6,7],[0,1,5,4],[1,2,6,5],[3,2,6,7],[0,3,7,4]]
+				tupleList = list(zip(xNodeHex, yNodeHex, zNodeHex))
+
+				poly3d = [[tupleList[vertices[ix][iy]] for iy in range(len(vertices[0]))] for ix in range(len(vertices))]
+				ax.add_collection3d(Poly3DCollection(poly3d, facecolors='r', linewidths=1, alpha=0.5))
+
+		# Setting the axes properties
+		if min(self.NodeX) != max(self.NodeX):
+			ax.set(xlim3d=(min(self.NodeX)*1.2, max(self.NodeX)*1.2))
+		else:
+			ax.set(xlim3d=(-1*self.dimensionPlot/10, self.dimensionPlot/10))
+		if min(self.NodeY) != max(self.NodeY):
+			ax.set(ylim3d=(min(self.NodeY)*1.2, max(self.NodeY)*1.2))
+		else:
+			ax.set(ylim3d=(-1*self.dimensionPlot/10, self.dimensionPlot/10))
+		if min(self.NodeZ) != max(self.NodeZ):
+			ax.set(zlim3d=(min(self.NodeZ)*1.2, max(self.NodeZ)*1.2))
+		else:
+			ax.set(zlim3d=(-1*self.dimensionPlot/10, self.dimensionPlot/10))
+
+		ax.title.set_text('Deformation scale factor: '+str(round(self.scaleFactorAnimation,1)))
+		ax.text(max(self.NodeX)*1.1, min(self.NodeY)*1.1, min(self.NodeZ)*1.1, 't = '+str(round(t,2))+'s')
+		ax.set_axis_off()
+		#plt.show()
+		results_dir = os.path.join(self.script_dir, self.caseName+"/deformation_animation/")
+		if not os.path.isdir(results_dir):
+			os.makedirs(results_dir)
+		filename = 'deformation_iteration_'+str(it)+'.png'#, bbox_inches = None)
+		plt.savefig(results_dir + filename)
+		plt.close()
+
 
 	def plotDeformedStructureSection(self,it,t,r,showPlotSection,plotSectionNodes):
 		ux = r[:self.NumberOfNodes]
@@ -496,7 +688,13 @@ class PlotModel():
 		else:
 			ax.set(zlim3d=(-1*self.dimensionPlot/10, self.dimensionPlot/10))
 
-		ax.title.set_text('Deformation scale factor: '+str(round(self.scaleFactorAnimation,1)))
+		#ax.title.set_text('Deformation scale factor: '+str(round(self.scaleFactorAnimation,1)))
+		font1 = {'family':'fantasy','color':'red','size':22}
+		font2 = {'family':'fantasy','color':'black','size':15}
+
+		#ax.set_title('La UD de Puentes de la UPM te desea Feliz Navidad!', fontdict = font1)
+		ax.set_title('Merry Christmas and vibrant 2025!', fontdict = font1)
+		ax.text(12, 0, 30, 'Alfredo & MDyn', fontdict = font2)
 		ax.text(max(self.NodeX)*1.1, min(self.NodeY)*1.1, min(self.NodeZ)*1.1, 't = '+str(round(t,2))+'s')
 		ax.set_axis_off()
 		#plt.show()
@@ -702,7 +900,7 @@ class WriteToFile():
 		q_Output = []
 		for dl in range(len(self.VehicleType)):
 			if dl in self.VehicleOrderToWrite:
-				if self.VehicleType[dl] == 'SDOFVehicle':
+				if self.VehicleType[dl] == 'quarterCar': #'SDOFVehicle':
 					NumDOFsVehicle = 1
 				q_Output.append(np.zeros((NumDOFsVehicle,counter)))# Vibrating system movements: [vehicle order referred to order in self.VehicleOrderToWrite] [Rows DOF of vib system; Cols. time]
 		return q_Output
@@ -719,7 +917,7 @@ class WriteToFile():
 		F_Output = []
 		for dl in range(len(self.VehicleType)):
 			if dl in self.VehicleOrderToWrite:
-				if self.VehicleType[dl] == 'SDOFVehicle':
+				if self.VehicleType[dl] == 'quarterCar': #'SDOFVehicle':
 					NumWheelsVehicle = 1 # There is one wheel in this vehicle
 					NumDirectionsRections = 1 # Only vertical reaction forces
 				F_Output.append(np.zeros((NumDirectionsRections,counter,NumWheelsVehicle))) # Vibrating system reaction forces: [vehicle order in vector self.VehicleOrderToWrite] [Rows Direction of reaction force; Cols. time; layer wheel]
@@ -783,7 +981,7 @@ class WriteToFile():
 		# F - All Vibrating system forces at contact points: # [order vehicle] [order of Direction,order of wheel]
 		for dl in range(len(self.VehicleType)):
 			if dl in self.VehicleOrderToWrite:
-				if self.VehicleType[dl] == 'SDOFVehicle':
+				if self.VehicleType[dl] == 'quarterCar': #'SDOFVehicle':
 					NumWheelsVehicle = 1
 					for wh in range(NumWheelsVehicle):	# Loop in wheel
 						Fout[dl][0,i] = F[self.VehicleOrderToWrite[dl]][0,wh]
