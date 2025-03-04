@@ -62,6 +62,16 @@ If you use MDyn in your research, please cite the following paper:
 <br>
 
 <p align="center">
+  <img src="https://github.com/AlfredoCamaraC/MDyn/blob/main/assets/MDyn_VBI_2_quarter_cars_bump.gif" width="800">
+</p>
+<p align="center">
+  Vehicle-bridge-interaction (VBI) analysis of two SDOF vehicles (quarter car models) crossing a bridge with a 5-cm deep bump at midpsan.
+</p>
+
+<br>
+
+
+<p align="center">
   <img src="https://github.com/AlfredoCamaraC/MDyn/blob/main/assets/MDyn_resonant_pedestrian_footbridge.gif" width="800">
 </p>
 <p align="center">
@@ -73,6 +83,15 @@ If you use MDyn in your research, please cite the following paper:
 </p>
 <p align="center">
 Vertical displacement at midspan</p>
+
+<br>
+
+<p align="center">
+  <img src="https://github.com/AlfredoCamaraC/MDyn/blob/main/assets/mrha_sync_el_centro_MDyn.gif" width="800">
+</p>
+<p align="center">
+  Modal response history analysis (MRHA) of the response of a building frame to the El Centro 1940 ground motion applied in the lateral and vertical directions (synchronous ground motion).
+</p>
 
 <br>
 
