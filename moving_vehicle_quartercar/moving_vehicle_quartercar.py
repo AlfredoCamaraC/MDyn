@@ -46,7 +46,7 @@ if __name__ == '__main__':
     BeamInformationFile = './bridgeData/BeamInformation.txt'
 
     ################# READ PAVEMENT INFORMATION FILE
-    IrregularityFlag = 'On' # 'On' if irregularities are defined or Off otherwise (perfect surface)
+    IrregularityFlag = 'Off' # 'On' if irregularities are defined or Off otherwise (perfect surface)
     IrregularityData = np.loadtxt(r'./bridgeData/bump.txt')   # np.loadtxt(r'bump.txt') # col 1 x, col 2 r in wheel line 1, col 2 r in line 2, all units in m
     yCoordIrregularityData = [-1,1] # y coordinates of the profile lines given in IrregularityData, in m
     ################# DEFINE VEHICLE
@@ -56,23 +56,23 @@ if __name__ == '__main__':
     Kv = 730e3  # Vertical stiffness of suspension/tyre of one wheel, in N/m
     fcar = np.sqrt(Kv/Mv)/(2*np.pi)
     print('vertical frequency of the car [Hz]:',fcar)
-    MassVehicles = [[Mv],[Mv]] # [Vehicle 1, vehicle 2, ...]
-    DampingVehicles = [[Cv],[Cv]] # [Vehicle 1, vehicle 2, ...]
-    StiffnessVehicles = [[Kv],[Kv]] # [Vehicle 1, vehicle 2, ...]
-    VehicleType = ['quarterCar','quarterCar']    # [Vehicle 1, Vehicle 2]
+    MassVehicles = [[Mv]] # [Vehicle 1, vehicle 2, ...]
+    DampingVehicles = [[Cv]] # [Vehicle 1, vehicle 2, ...]
+    StiffnessVehicles = [[Kv]] # [Vehicle 1, vehicle 2, ...]
+    VehicleType = ['quarterCar']    # [Vehicle 1, Vehicle 2]
 
-    YVehicle = [[0],[0]] # Local distance between centre of car and wheel contact point, in lateral direction, in m [[wheel 1 of car 1, wheel 2 of car 1, etc],[wheel 1 of car 2, wheel 2 of car 2, etc],...]
-    XVehicle = [[0],[0]] # Local distance between centre of car and wheel contact point, in longitudinal direction, in m  [[wheel 1 of car 1, wheel 2 of car 1, etc],[wheel 1 of car 2, wheel 2 of car 2, etc],...]
-    XCGVehicle0 = [0,-10.] # Global distance between origin of coordinates of bridge and center of vehicle at start of analysis, in longitudinal direction, in m, [vehicle 1, vehicle 2, etc]
-    YCGVehicle0 = [0,0] # Global distance between origin of coordinates of bridge and center of vehicle at start of analysis, in transverse direction, in m, [vehicle 1, vehicle 2, etc]
+    YVehicle = [[0]] # Local distance between centre of car and wheel contact point, in lateral direction, in m [[wheel 1 of car 1, wheel 2 of car 1, etc],[wheel 1 of car 2, wheel 2 of car 2, etc],...]
+    XVehicle = [[0]] # Local distance between centre of car and wheel contact point, in longitudinal direction, in m  [[wheel 1 of car 1, wheel 2 of car 1, etc],[wheel 1 of car 2, wheel 2 of car 2, etc],...]
+    XCGVehicle0 = [0] # Global distance between origin of coordinates of bridge and center of vehicle at start of analysis, in longitudinal direction, in m, [vehicle 1, vehicle 2, etc]
+    YCGVehicle0 = [0] # Global distance between origin of coordinates of bridge and center of vehicle at start of analysis, in transverse direction, in m, [vehicle 1, vehicle 2, etc]
 
     VLoad = 100./3.6 # Velocity of the vehicle in m/s
-    VVehicle = [VLoad,VLoad] # [vehicle 1,vehicle 2,...]
+    VVehicle = [VLoad] # [vehicle 1,vehicle 2,...]
 
     DirectionLoad = 3 # ONLY WORKS FOR =3 IN THE MOVING LOAD ANALYSIS, DO NOT CHANGE
     DirectionMoment = 4 # Because the vertical load may induce torsion
 
-    L = 40.+10.                 # Total length of the deck
+    L = 40.                 # Total length of the deck
     tmax = 2.0*L/VLoad     # Total calculation time. Keep this to have it 25% larger than the time it takes for a single load to cross the bridge if it starts at the left abutment
     dt = 0.01 # Step time in s.
 
@@ -86,7 +86,7 @@ if __name__ == '__main__':
     # OUTPUT
     #Create output folder and path to results
     NodeNumberToWrite = [10051] #24 for midspan at centreline
-    VehicleOrderToWrite = [0,1]   # Order of vehicle to get the response from
+    VehicleOrderToWrite = [0]   # Order of vehicle to get the response from
     writeOutputRate = 1
     # Animation
     animationRate = 0   #10 # Rate of frame recording for the animations, = 0 if no animation is to be recorded
