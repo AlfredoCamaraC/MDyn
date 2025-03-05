@@ -665,7 +665,7 @@ class PlotModel():
 			YCGVehicle0 = xyCGVehiclev[i][1]
 			x = [XCGVehicle0,XCGVehicle0]
 			y = [YCGVehicle0,YCGVehicle0]
-			z = [0,-LoadAmplitudeNorm[i]]
+			z = [0,LoadAmplitudeNorm[i]]
 			# line
 			ax.plot(x, y, z, c='tab:red', linewidth=1)
 			# arrow head
@@ -693,8 +693,9 @@ class PlotModel():
 		font2 = {'family':'fantasy','color':'black','size':15}
 
 		#ax.set_title('La UD de Puentes de la UPM te desea Feliz Navidad!', fontdict = font1)
-		ax.set_title('Merry Christmas and vibrant 2025!', fontdict = font1)
-		ax.text(12, 0, 30, 'Alfredo & MDyn', fontdict = font2)
+		#ax.set_title('Merry Christmas and vibrant 2025!', fontdict = font1)
+		#ax.text(12, 0, 30, 'Alfredo & MDyn', fontdict = font2)
+		ax.title.set_text('Deformation scale factor: '+str(round(self.scaleFactorAnimation,1)))
 		ax.text(max(self.NodeX)*1.1, min(self.NodeY)*1.1, min(self.NodeZ)*1.1, 't = '+str(round(t,2))+'s')
 		ax.set_axis_off()
 		#plt.show()

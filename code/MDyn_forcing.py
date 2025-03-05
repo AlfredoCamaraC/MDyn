@@ -137,28 +137,29 @@ class MovingLoads():
 
         return zpavement
 
-    def ConstantMovingLoads(self,time,P):
-        for dl in range(len(self.PVehicle)):		 # Loop in vehicles
-            XCGVehicle = self.XCGVehicle0[dl]+(self.VVhehicle[dl]*time)# Position of the centroid of the vehicle
-            for wh in range(len(self.PVehicle[dl])):	# Loop in wheels
-                Ptemp = np.zeros(self.NumberOfNodes*len(self.DOFactive))
-                xLoad = XCGVehicle + self.XVehicle[dl][wh] # Position of the load
-                yLoad = self.YCGVehicle0[dl] + self.YVehicle[dl][wh]
-                if self.xFirstNodeVehicleBeams <= xLoad and xLoad <= self.xLastNodeVehicleBeams: # The load is on the Bridge
-                    ks = bisect_left(self.NodeXVehicleBeams,xLoad)-1
-                    xNode1 = self.NodeX[ks]	# Coordinate of the start node in the loaded beam
-                    BeamElementLength = self.NodeX[ks+1]-xNode1
-                    PNode1 = (self.PVehicle[dl][wh]*(1-((xLoad-xNode1)/BeamElementLength)))
-                    PNode2 = self.PVehicle[dl][wh]-PNode1
-                    MNode1 = PNode1*yLoad
-                    MNode2 = PNode2*yLoad
-                    # Vertical loads
-                    Ptemp[(self.NumberOfNodes*self.indexDOFLoad)+ks] = PNode1
-                    Ptemp[(self.NumberOfNodes*self.indexDOFLoad)+ks+1] = PNode2
-                    # Torsional moments
-                    Ptemp[(self.NumberOfNodes*self.indexDOFMoment)+ks] = MNode1
-                    Ptemp[(self.NumberOfNodes*self.indexDOFMoment)+ks+1] = MNode2
-                    P = P + Ptemp
+    def ConstantMovingLoads(self,dl,xyCGVehicle):
+        XCGVehicle0 = xyCGVehicle[0]
+        YCGVehicle0 = xyCGVehicle[1]
+        P = np.zeros(self.NumberOfNodes*len(self.DOFactive))
+        for wh in range(len(self.XVehicle[dl])):	# Loop in wheels
+            Ptemp = np.zeros(self.NumberOfNodes*len(self.DOFactive))
+            xLoad = XCGVehicle0 + self.XVehicle[dl][wh] # Position of the load
+            yLoad = YCGVehicle0 + self.YVehicle[dl][wh]
+            if self.xFirstNodeVehicleBeams <= xLoad and xLoad <= self.xLastNodeVehicleBeams: # The load is on the Bridge
+                ks = bisect_left(self.NodeXVehicleBeams,xLoad)-1
+                xNode1 = self.NodeX[ks]	# Coordinate of the start node in the loaded beam
+                BeamElementLength = self.NodeX[ks+1]-xNode1
+                PNode1 = (self.PVehicle[dl]*(1-((xLoad-xNode1)/BeamElementLength)))
+                PNode2 = self.PVehicle[dl]-PNode1
+                MNode1 = PNode1*yLoad
+                MNode2 = PNode2*yLoad
+                # Vertical loads
+                Ptemp[(self.NumberOfNodes*self.indexDOFLoad)+ks] = PNode1
+                Ptemp[(self.NumberOfNodes*self.indexDOFLoad)+ks+1] = PNode2
+                # Torsional moments
+                Ptemp[(self.NumberOfNodes*self.indexDOFMoment)+ks] = MNode1
+                Ptemp[(self.NumberOfNodes*self.indexDOFMoment)+ks+1] = MNode2
+                P += Ptemp
 
         return P
 
