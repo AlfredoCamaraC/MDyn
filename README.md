@@ -4,12 +4,16 @@
 </p>
 
 # MDyn: Accelerated Modal Dynamics Solver
-MDyn is a fast modal superposition analysis software highly vectorised in Python to solve structural dynamics problems involving wind, pedestrians, vehicles, trains, ... and their interaction. It can also calculate transfer functions (receptance) of structures and obtain influence lines from static moving loads.
+MDyn is a fast modal superposition analysis software highly vectorised in Python to solve structural dynamics problems involving wind, earthquakes, pedestrians, vehicles, trains, ... and their interaction. It can also calculate transfer functions (receptance) of structures and obtain influence lines from static moving loads.
 
 It was created by Alfredo Camara, and contributions from you are welcome. If you are interested please contact here: alfredo.camara@upm.es
 
 ## Getting Started
-The running codes are fully commented and should be easy to navigate, but tutorials are on the way.
+The running codes are fully commented and should be easy to navigate. You can find video tutorials on MDyn from this link: 
+
+https://drive.upm.es/s/TCAQFLkZlWqW1zM
+
+More tutorials are on the way.
 
 ## Instalation
 No instalation is needed (beyond some standard Python libraries like numpy, scipy, matplotlib). The subfolder "code" needs to be in the parent directory when running the main python script in the working sub-directory, as it is structured here.
