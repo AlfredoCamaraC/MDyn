@@ -46,9 +46,9 @@ if __name__ == '__main__':
     BeamInformationFile = './bridgeData/BeamInformation.txt'
 
     ################# READ PAVEMENT INFORMATION FILE
-    IrregularityFlag = 'On' # 'On' if irregularities are defined or Off otherwise (perfect surface)
-    IrregularityData = np.loadtxt(r'./bridgeData/bump.txt')   # np.loadtxt(r'bump.txt') # col 1 x, col 2 r in wheel line 1, col 2 r in line 2, all units in m
-    yCoordIrregularityData = [-1,1] # y coordinates of the profile lines given in IrregularityData, in m
+    IrregularityFlag = 'Off' # 'On' if irregularities are defined or Off otherwise (perfect surface)
+    #IrregularityData = np.loadtxt(r'./bridgeData/bump.txt')   # np.loadtxt(r'bump.txt') # col 1 x, col 2 r in wheel line 1, col 2 r in line 2, all units in m
+    #yCoordIrregularityData = [-1,1] # y coordinates of the profile lines given in IrregularityData, in m
     ################# DEFINE VEHICLE
     # DEFINE vehicle
     Mv = 18.5e3    # Mass of vehicle in kg
