@@ -52,21 +52,22 @@ if __name__ == '__main__':
     ################# DEFINE VEHICLE
     # DEFINE vehicle
     Mv = 18.5e3    # Mass of vehicle in kg
-    PVehicle = [-1*Mv*9.81] # [Vehicle 1, vehicle 2, ...]
+    Pv = Mv*9.81
+    PVehicle = [[-1*Pv*0.15,-1*Pv*0.35,-1*Pv*0.15,-1*Pv*0.35],[-1*2*Pv*0.15,-1*2*Pv*0.35,-1*2*Pv*0.15,-1*2*Pv*0.35]] # [Vehicle 1, vehicle 2, ...]
 
-    YVehicle = [[0]] # Local distance between centre of car and wheel contact point, in lateral direction, in m [[wheel 1 of car 1, wheel 2 of car 1, etc],[wheel 1 of car 2, wheel 2 of car 2, etc],...]
-    XVehicle = [[0]] # Local distance between centre of car and wheel contact point, in longitudinal direction, in m  [[wheel 1 of car 1, wheel 2 of car 1, etc],[wheel 1 of car 2, wheel 2 of car 2, etc],...]
-    XCGVehicle0 = [0] # Global distance between origin of coordinates of bridge and center of vehicle at start of analysis, in longitudinal direction, in m, [vehicle 1, vehicle 2, etc]
-    YCGVehicle0 = [0] # Global distance between origin of coordinates of bridge and center of vehicle at start of analysis, in transverse direction, in m, [vehicle 1, vehicle 2, etc]
+    YVehicle = [[-1,-1,1,1],[-1,-1,1,1]] # Local distance between centre of car and wheel contact point, in lateral direction, in m [[wheel 1 of car 1, wheel 2 of car 1, etc],[wheel 1 of car 2, wheel 2 of car 2, etc],...]
+    XVehicle = [[1,-3,1,-3],[1,-3,1,-3]] # Local distance between centre of car and wheel contact point, in longitudinal direction, in m  [[wheel 1 of car 1, wheel 2 of car 1, etc],[wheel 1 of car 2, wheel 2 of car 2, etc],...]
+    XCGVehicle0 = [-1,-20] # Global distance between origin of coordinates of bridge and center of vehicle at start of analysis, in longitudinal direction, in m, [vehicle 1, vehicle 2, etc]
+    YCGVehicle0 = [1.73,-5] # Global distance between origin of coordinates of bridge and center of vehicle at start of analysis, in transverse direction, in m, [vehicle 1, vehicle 2, etc]
 
     VLoad = 100./3.6 # Velocity of the vehicle in m/s
-    VVehicle = [VLoad] # [vehicle 1,vehicle 2,...]
+    VVehicle = [VLoad,VLoad] # [vehicle 1,vehicle 2,...]
 
     DirectionLoad = 3 # ONLY WORKS FOR =3 IN THE MOVING LOAD ANALYSIS, DO NOT CHANGE
     DirectionMoment = 4 # Because the vertical load may induce torsion
 
-    L = 40.                 # Total length of the deck
-    tmax = 2.0*L/VLoad     # Total calculation time. Keep this to have it 25% larger than the time it takes for a single load to cross the bridge if it starts at the left abutment
+    L = 40. +20                # Total length of the deck
+    tmax = 1.5*L/VLoad     # Total calculation time. Keep this to have it 25% larger than the time it takes for a single load to cross the bridge if it starts at the left abutment
     dt = 0.01 # Step time in s.
 
 
@@ -82,15 +83,15 @@ if __name__ == '__main__':
     writeOutputRate = 1
     # Animation
     # Animation
-    animationRate = 10   #10 # Rate of frame recording for the animations, = 0 if no animation is to be recorded
+    animationRate = 5   #10 # Rate of frame recording for the animations, = 0 if no animation is to be recorded
     scaleFactorAnimation = 5000
     yc = 2. # Shift nodes to refer to center of section
     zc = 0.3 # Shift nodes to refer to center of section
     showPlotSection = [[0-yc,0-zc],[4-yc,0-zc],[4-yc,-0.1-zc],[3-yc,-0.1-zc],[3-yc,-1.1-zc],[1-yc,-1.1-zc],[1-yc,-0.1-zc],[0-yc,-0.1-zc]] # Coordinates of nodes of section to be plotted, connected with lines and closed.
     plotSectionNodes = [10001,100011,10021,100031,10041,100051,10061,100071,10081,100091,10101] # Nodes in which sections are plot
     durationAnimation = 100
-    maxLoad = abs(PVehicle[0])  # To normalise the load, for visualisation
-    LoadAmplitude = np.ones(len(PVehicle))*maxLoad # For animation
+    maxLoad = Mv*9.81 #Mv*9.81  # To normalise the load, for visualisation
+    #LoadAmplitude = np.ones(np.shape(YVehicle))*maxLoad # For animation
     removeAnimationFigures = 1 # = 1 to remove all files in the folder from which the animation is created. = 0 otherwise
 
 
@@ -213,7 +214,7 @@ if __name__ == '__main__':
         output_flag = animationRate > 0 and (i % animationRate == 0 or i == 1 or i == len(t))
         if output_flag:
 #            plots.plotDeformedStructureSection(i,t[i],r,showPlotSection,plotSectionNodes)
-            plots.plotDeformedStructureSectionLoads(i,t[i],r,LoadAmplitude,maxLoad,xyCGVehiclev,showPlotSection,plotSectionNodes)
+            plots.plotDeformedStructureSectionLoads(i,t[i],r,PVehicle,maxLoad,xyCGVehiclev,showPlotSection,plotSectionNodes)
             filenamesAnimation.append('deformation_iteration_'+str(i)+'.png')
 
         # Progress bar
