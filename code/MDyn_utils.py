@@ -609,7 +609,7 @@ class PlotModel():
 		urx = urx*self.scaleFactorAnimation
 
 		# force vector
-		LoadAmplitudeNorm = LoadAmplitude*(self.dimensionPlot*0.2)/maxLoad
+		LoadAmplitudeNorm = abs(np.array(LoadAmplitude))*(self.dimensionPlot*0.3)/maxLoad
 		arrowDimension = self.dimensionPlot/50
 
 		NodeXdef = self.NodeX+ux*self.scaleFactorAnimation
@@ -660,18 +660,19 @@ class PlotModel():
 
 				ax.plot(x, y, z, c='tab:blue', linewidth=0.75)
 
-		for i in range(len(LoadAmplitudeNorm)): # loop in loads
-			XCGVehicle0 = xyCGVehiclev[i][0]
-			YCGVehicle0 = xyCGVehiclev[i][1]
-			x = [XCGVehicle0,XCGVehicle0]
-			y = [YCGVehicle0,YCGVehicle0]
-			z = [0,LoadAmplitudeNorm[i]]
-			# line
-			ax.plot(x, y, z, c='tab:red', linewidth=1)
-			# arrow head
-			ax.plot([XCGVehicle0,XCGVehicle0+arrowDimension], y, [0,arrowDimension*1.2], c='tab:red', linewidth=1)
-			ax.plot([XCGVehicle0,XCGVehicle0-arrowDimension], y, [0,arrowDimension*1.2], c='tab:red', linewidth=1)
-			ax.plot([XCGVehicle0-arrowDimension,XCGVehicle0+arrowDimension], y, [arrowDimension*1.2,arrowDimension*1.2], c='tab:red', linewidth=1)
+		for i in range(len(self.YVehicle)): # loop in vehicles
+			for j in range(len(self.YVehicle[i])): # loop in wheels
+				XWheel = xyCGVehiclev[i][0] + self.XVehicle[i][j]
+				YWheel = xyCGVehiclev[i][1] + self.YVehicle[i][j]
+				x = [XWheel,XWheel]
+				y = [YWheel,YWheel]
+				z = [0,LoadAmplitudeNorm[i][j]]
+				# line
+				ax.plot(x, y, z, c='tab:red', linewidth=1)
+				# arrow head
+				ax.plot([XWheel,XWheel+arrowDimension], y, [0,arrowDimension*1.2], c='tab:red', linewidth=1)
+				ax.plot([XWheel,XWheel-arrowDimension], y, [0,arrowDimension*1.2], c='tab:red', linewidth=1)
+				ax.plot([XWheel-arrowDimension,XWheel+arrowDimension], y, [arrowDimension*1.2,arrowDimension*1.2], c='tab:red', linewidth=1)
 
 
 		# Setting the axes properties

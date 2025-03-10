@@ -149,8 +149,8 @@ class MovingLoads():
                 ks = bisect_left(self.NodeXVehicleBeams,xLoad)-1
                 xNode1 = self.NodeX[ks]	# Coordinate of the start node in the loaded beam
                 BeamElementLength = self.NodeX[ks+1]-xNode1
-                PNode1 = (self.PVehicle[dl]*(1-((xLoad-xNode1)/BeamElementLength)))
-                PNode2 = self.PVehicle[dl]-PNode1
+                PNode1 = (self.PVehicle[dl][wh]*(1-((xLoad-xNode1)/BeamElementLength)))
+                PNode2 = self.PVehicle[dl][wh]-PNode1
                 MNode1 = PNode1*yLoad
                 MNode2 = PNode2*yLoad
                 # Vertical loads
