@@ -660,19 +660,34 @@ class PlotModel():
 
 				ax.plot(x, y, z, c='tab:blue', linewidth=0.75)
 
-		for i in range(len(self.YVehicle)): # loop in vehicles
-			for j in range(len(self.YVehicle[i])): # loop in wheels
-				XWheel = xyCGVehiclev[i][0] + self.XVehicle[i][j]
-				YWheel = xyCGVehiclev[i][1] + self.YVehicle[i][j]
-				x = [XWheel,XWheel]
-				y = [YWheel,YWheel]
-				z = [0,LoadAmplitudeNorm[i][j]]
-				# line
-				ax.plot(x, y, z, c='tab:red', linewidth=1)
-				# arrow head
-				ax.plot([XWheel,XWheel+arrowDimension], y, [0,arrowDimension*1.2], c='tab:red', linewidth=1)
-				ax.plot([XWheel,XWheel-arrowDimension], y, [0,arrowDimension*1.2], c='tab:red', linewidth=1)
-				ax.plot([XWheel-arrowDimension,XWheel+arrowDimension], y, [arrowDimension*1.2,arrowDimension*1.2], c='tab:red', linewidth=1)
+		if isinstance(LoadAmplitudeNorm[0], list):
+			for i in range(len(self.YVehicle)): # loop in vehicles
+				for j in range(len(self.YVehicle[i])): # loop in wheels
+					XWheel = xyCGVehiclev[i][0] + self.XVehicle[i][j]
+					YWheel = xyCGVehiclev[i][1] + self.YVehicle[i][j]
+					x = [XWheel,XWheel]
+					y = [YWheel,YWheel]
+					z = [0,LoadAmplitudeNorm[i][j]]
+					# line
+					ax.plot(x, y, z, c='tab:red', linewidth=1)
+					# arrow head
+					ax.plot([XWheel,XWheel+arrowDimension], y, [0,arrowDimension*1.2], c='tab:red', linewidth=1)
+					ax.plot([XWheel,XWheel-arrowDimension], y, [0,arrowDimension*1.2], c='tab:red', linewidth=1)
+					ax.plot([XWheel-arrowDimension,XWheel+arrowDimension], y, [arrowDimension*1.2,arrowDimension*1.2], c='tab:red', linewidth=1)
+		else:
+			for i in range(len(self.YVehicle)): # loop in vehicles
+				for j in range(len(self.YVehicle[i])): # loop in wheels
+					XWheel = xyCGVehiclev[i][0] + self.XVehicle[i][j]
+					YWheel = xyCGVehiclev[i][1] + self.YVehicle[i][j]
+					x = [XWheel,XWheel]
+					y = [YWheel,YWheel]
+					z = [0,LoadAmplitudeNorm[i]]
+					# line
+					ax.plot(x, y, z, c='tab:red', linewidth=1)
+					# arrow head
+					ax.plot([XWheel,XWheel+arrowDimension], y, [0,arrowDimension*1.2], c='tab:red', linewidth=1)
+					ax.plot([XWheel,XWheel-arrowDimension], y, [0,arrowDimension*1.2], c='tab:red', linewidth=1)
+					ax.plot([XWheel-arrowDimension,XWheel+arrowDimension], y, [arrowDimension*1.2,arrowDimension*1.2], c='tab:red', linewidth=1)
 
 
 		# Setting the axes properties
