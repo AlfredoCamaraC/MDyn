@@ -198,8 +198,8 @@ class MovingLoads():
         XCGVehicle0 = xyCGVehicle[0]
         YCGVehicle0 = xyCGVehicle[1]
         Ptemp = np.zeros(self.NumberOfNodes*len(self.DOFactive))
-        xLoad = XCGVehicle0 + self.XVehicle[dl] # Position of the load
-        yLoad = YCGVehicle0 + self.YVehicle[dl]
+        xLoad = XCGVehicle0 + self.XVehicle[dl][0] # Position of the load, the pedestrian has only one "leg" that combines the left and right ones
+        yLoad = YCGVehicle0 + self.YVehicle[dl][0]
         if self.xFirstNodeVehicleBeams <= xLoad and xLoad <= self.xLastNodeVehicleBeams: # The load is on the Bridge
             ks = bisect_left(self.NodeXVehicleBeams,xLoad)-1
             xNode1 = self.NodeX[ks]	# Coordinate of the start node in the loaded beam
