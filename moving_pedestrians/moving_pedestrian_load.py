@@ -17,7 +17,7 @@ from tqdm import tqdm
 import sys
 import os
 
-sys.path.append('..\code')
+sys.path.append(r'..\code')
 from MDyn_forcing import *
 from MDyn_utils import *
 from MDyn_solver import *
@@ -67,8 +67,8 @@ if __name__ == '__main__':
     Gv = [[G0,G1,G2,G3]] # Matrix with the Weight (first component) and DLF (second component and above) of each harmonic of the pedestrian loading, for each pedestrian. Positive direction of the axis DirectionLoad
     phiv = [[phi0,phi1,phi2,phi3]] # Matrix with the phase angles of each harmonic. [[pedestrian 1],[pedestrian 2],...]
     fmv = [fm]	# Stepping frequency in Hz, of each pedestrian.
-    YVehicle = [0] # Local distance between contact point and center of pedestrian, in lateral direction, in m
-    XVehicle = [0] # # Local distance between contact point and center of pedestrian, in longitudinal direction, in m
+    YVehicle = [[0]] # Local distance between contact point and center of pedestrian, in lateral direction, in m
+    XVehicle = [[0]] # # Local distance between contact point and center of pedestrian, in longitudinal direction, in m
     XCGVehicle0 = [0] # Global distance between origin of coordinates and enter of pedestrian at start of analysis, in longitudinal direction, in m
     YCGVehicle0 = [0] # # Global distance between origin of coordinates and enter of pedestrian at start of analysis, in lateral direction, in m
 
