@@ -1093,7 +1093,7 @@ class FEModel:
         self.size = self.n_nodes * self.dof
         self.K_global = np.zeros((self.size, self.size))
 
-        print("Assembling stiffness matrix...")
+        #print("Assembling stiffness matrix...")
         element_counts = {}
 
         for elem_id, elem in self.elements.items():
