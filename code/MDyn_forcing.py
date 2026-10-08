@@ -204,10 +204,10 @@ class MovingLoads():
             ks = bisect_left(self.NodeXVehicleBeams,xLoad)-1
             xNode1 = self.NodeX[ks]	# Coordinate of the start node in the loaded beam
             BeamElementLength = self.NodeX[ks+1]-xNode1
-            Fp = self.Gv[dl][0] + self.Gv[dl][1]*np.sin(2*np.pi*self.fmv[dl]*time)
+            Fp = self.Gv[dl][0] + self.Gv[dl][1]*np.sin((2*np.pi*self.fmv[dl]*time)-self.phiv[dl][1])
             if numberharmonics > 2:
                 for nharmonic in range(2,numberharmonics):
-                    Fp += self.Gv[dl][nharmonic]*np.sin((2*np.pi*self.fmv[dl]*time)-self.phiv[dl][nharmonic])
+                    Fp += self.Gv[dl][nharmonic]*np.sin((2*np.pi*nharmonic*self.fmv[dl]*time)-self.phiv[dl][nharmonic])
 
             PNode1 = (Fp*(1-((xLoad-xNode1)/BeamElementLength)))
             PNode2 = Fp-PNode1
